@@ -215,23 +215,8 @@ module.exports = function (app, db) {
     });
   });
 
-
-  //test
-  // app.put('/user/auth', (req, res) => {
-  //   const login = req.body.login;
-  //   const password = req.body.password;
-
-  //   db.collection('users').update({ "login": login }, { $set: { "password": password } }, (err, result) => {
-  //     if (err) {
-  //       res.send({ 'error': 'An error has occurred' });
-  //     } else {
-  //       res.send(password);
-  //     }
-  //   });
-  // });
-
   //test 2.0
-  app.post('user/auth', (req, res) => {
+  app.post('/user/password', (req, res) => {
     const login = req.body.login;
     const password = req.body.password;
     const newPassword1 = req.body.newPassword1;
@@ -239,7 +224,7 @@ module.exports = function (app, db) {
 
     db.collection('users').find({ "login": login, "password": password }).toArray(function (err, result) {
       if (err) throw err;
-      //res.send(login);
+
       if (!_.isEmpty(result)) {
         if (newPassword1 === newPassword2) {
           console.log('WESZLEM')
@@ -248,7 +233,8 @@ module.exports = function (app, db) {
               res.send({ 'error': 'An error has occurred' });
             } else {
               // ???
-              res.send(NewPassword1);
+              if (err) throw err;
+              res.status(200).send({ document: result, success: true })
             }
           })
         } else {
@@ -260,6 +246,31 @@ module.exports = function (app, db) {
       }
     });
   })
+
+  //rejestracja
+  app.post('/register/ph', (req, res) => {
+    const login = req.body.login;
+    const ph = { "name": req.body.name, "street": req.body.street, "city": req.body.city, "post-code": req.body.postCode, "voivodeship": req.body.voivodeship, "phone": req.body.phone, "login": req.body.login, "password": req.body.password };
+
+    //sprawdz czy user istnieje
+    db.collection('users').find({ "login": login }).toArray(function (err, result) {
+      if (err) throw err;
+      //nie istnieje
+      if (_.isEmpty(result)) {
+        db.collection('users').insert(ph, (err, result) => {
+          if (err) {
+            res.send({ 'error': 'An error has occurred' });
+          } else {
+            res.send(result);
+          }
+        });
+      //istnieje error
+      } else {
+        res.send({'error': 'User istnieje'})
+      }
+    });
+
+  });
 
 
 };
