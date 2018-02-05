@@ -66,38 +66,38 @@ module.exports = function (app, db) {
     return deg * (Math.PI / 180)
   }
 
-  // app.post('/user/auth', (req, res) => {
-  //   const login = req.body.login;
-  //   const password = req.body.password;
-  //   const manager = req.body.manager;
-  //   if (manager) {
-  //     db.collection('pharmacy_manager').find({ "login": login, "password": password }).toArray((err, manager) => {
-  //       if (err) throw err;
-  //       else if (!_.isEmpty(manager)) {
-  //         db.collection('users').find({ "net": manager[0].net }).toArray((err, documents) => {
-  //           if (err) throw err;
-  //           else {
-  //             res.status(200).send({ success: true, manager: manager[0], documents });
-  //           }
-  //         });
-  //       } else {
-  //         res.status(200).send({ success: false });
-  //       }
-  //     });
-  //   } else {
-  //     db.collection('users').find({ "login": login, "password": password }).toArray(function (err, result) {
-  //       if (err) throw err;
-  //       if (!_.isEmpty(result)) {
-  //         db.collection('history').insert({ "phId": result[0]._id, "time": Date.now() }, (err, success) => {
-  //           if (err) throw err;
-  //           res.status(200).send({ document: result, success: true });
-  //         });
-  //       } else {
-  //         res.status(200).send({ success: false, document: {} })
-  //       }
-  //     });
-  //   }
-  // });
+  app.post('/user/auth', (req, res) => {
+    const login = req.body.login;
+    const password = req.body.password;
+    const manager = req.body.manager;
+    if (manager) {
+      db.collection('pharmacy_manager').find({ "login": login, "password": password }).toArray((err, manager) => {
+        if (err) throw err;
+        else if (!_.isEmpty(manager)) {
+          db.collection('users').find({ "net": manager[0].net }).toArray((err, documents) => {
+            if (err) throw err;
+            else {
+              res.status(200).send({ success: true, manager: manager[0], documents });
+            }
+          });
+        } else {
+          res.status(200).send({ success: false });
+        }
+      });
+    } else {
+      db.collection('users').find({ "login": login, "password": password }).toArray(function (err, result) {
+        if (err) throw err;
+        if (!_.isEmpty(result)) {
+          db.collection('history').insert({ "phId": result[0]._id, "time": Date.now() }, (err, success) => {
+            if (err) throw err;
+            res.status(200).send({ document: result, success: true });
+          });
+        } else {
+          res.status(200).send({ success: false, document: {} })
+        }
+      });
+    }
+  });
 
   app.get('/drugs', (req, res) => {
     db.collection('drugs').find({}).toArray(function (err, result) {
@@ -227,7 +227,6 @@ module.exports = function (app, db) {
 
       if (!_.isEmpty(result)) {
         if (newPassword1 === newPassword2) {
-          console.log('WESZLEM')
           db.collection('users').update({ "login": login }, { $set: { "password": newPassword1 } }, (err, result) => {
             if (err) {
               res.send({ 'error': 'An error has occurred' });
@@ -261,16 +260,34 @@ module.exports = function (app, db) {
           if (err) {
             res.send({ 'error': 'An error has occurred' });
           } else {
-            res.send(result);
+            //res.send(result);
+            res.status(200).send({ document: result, success: true });
           }
         });
-      //istnieje error
+        //istnieje error
       } else {
-        res.send({'error': 'User istnieje'})
+        res.send({ 'error': 'User istnieje' })
       }
     });
 
   });
 
+
+  //zmiana coordow
+  app.post('/user/coords', (req, res) => {
+    const login = req.body.login;
+    const lon = Number(req.body.lon);
+    const lat = Number(req.body.lat);
+    //znajdz usera
+    db.collection('users').updateOne({ "login": login }, { $set: { "lat": lat, "lon": lon } }, (err, result) => {
+      if (err) {
+        res.send({ 'error': 'An error has occurred' });
+      } else {
+        if (err) throw err;
+        res.status(200).send({ document: result, success: true });
+      }
+    })
+
+  })
 
 };
